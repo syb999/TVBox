@@ -868,10 +868,16 @@ public class LivePlayActivity extends BaseActivity {
                 String savedEpgKey = channelName + "_" + epgDateAdapter.getItem(epgDateAdapter.getSelectedIndex()).getDatePresented();
                 if (!hsEpg.containsKey(savedEpgKey))
                     hsEpg.put(savedEpgKey, arrayList);
+                if (channelName != null && !channelName.equals(channel_Name.getChannelName()))
+                    return;
+
+                showEpg(date, arrayList);
                 showBottomEpg();
             }
 
             public void onFailure(int i, String str) {
+                if (channelName != null && !channelName.equals(channel_Name.getChannelName()))
+                    return;
                 showEpg(date, new ArrayList());
                 showBottomEpg();
             }
