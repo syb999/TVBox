@@ -866,7 +866,7 @@ public class LivePlayActivity extends BaseActivity {
                 showEpg(date, arrayList);
 
                 String savedEpgKey = channelName + "_" + epgDateAdapter.getItem(epgDateAdapter.getSelectedIndex()).getDatePresented();
-                if (!hsEpg.contains(savedEpgKey))
+                if (!hsEpg.containsKey(savedEpgKey))
                     hsEpg.put(savedEpgKey, arrayList);
                 showBottomEpg();
             }
