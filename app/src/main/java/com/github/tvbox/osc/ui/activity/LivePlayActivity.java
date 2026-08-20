@@ -768,8 +768,8 @@ public class LivePlayActivity extends BaseActivity {
 
     //显示底部EPG
     private void showBottomEpg() {
-        if (isSHIYI)
-            return;
+        // if (isSHIYI)
+        //     return;
         if (channel_Name.getChannelName() != null) {
             showChannelInfo();
             String savedEpgKey = channel_Name.getChannelName() + "_" + epgDateAdapter.getItem(epgDateAdapter.getSelectedIndex()).getDatePresented();
