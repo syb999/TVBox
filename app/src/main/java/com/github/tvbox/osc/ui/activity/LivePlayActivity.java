@@ -1204,6 +1204,12 @@ public class LivePlayActivity extends BaseActivity {
                 String targetDate = dateFormat.format(date);
                 String shiyiStartdate = targetDate + selectedData.originStart.replace(":", "") + "30";
                 String shiyiEnddate = targetDate + selectedData.originEnd.replace(":", "") + "30";
+                if (selectedData.originEnd.replace(":", "").compareTo(selectedData.originStart.replace(":", "")) <= 0) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+                    shiyiEnddate = dateFormat.format(cal.getTime()) + selectedData.originEnd.replace(":", "") + "30";
+                }
                 Date now = new Date();
                 if (now.compareTo(selectedData.startdateTime) < 0) {
                     return;
@@ -1243,6 +1249,12 @@ public class LivePlayActivity extends BaseActivity {
                 String targetDate = dateFormat.format(date);
                 String shiyiStartdate = targetDate + selectedData.originStart.replace(":", "") + "30";
                 String shiyiEnddate = targetDate + selectedData.originEnd.replace(":", "") + "30";
+                if (selectedData.originEnd.replace(":", "").compareTo(selectedData.originStart.replace(":", "")) <= 0) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(date);
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+                    shiyiEnddate = dateFormat.format(cal.getTime()) + selectedData.originEnd.replace(":", "") + "30";
+                }
                 Date now = new Date();
                 if (now.compareTo(selectedData.startdateTime) < 0) {
                     return;

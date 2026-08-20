@@ -2,6 +2,7 @@ package com.github.tvbox.osc.bean;
 
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -34,6 +35,12 @@ public class Epginfo {
         userSimpleDateFormat.setTimeZone(TimeZone.getDefault());
         startdateTime = userSimpleDateFormat.parse(simpleDateFormat.format(date) + " " + str1 + ":00 GMT+8:00", new ParsePosition(0));
         enddateTime = userSimpleDateFormat.parse(simpleDateFormat.format(date) + " " + str2 + ":00 GMT+8:00", new ParsePosition(0));
+        if (enddateTime != null && startdateTime != null && enddateTime.compareTo(startdateTime) <= 0) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(enddateTime);
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            enddateTime = cal.getTime();
+        }
         SimpleDateFormat zoneFormat = new SimpleDateFormat("HH:mm");
         start = zoneFormat.format(startdateTime);
         end = zoneFormat.format(enddateTime);
