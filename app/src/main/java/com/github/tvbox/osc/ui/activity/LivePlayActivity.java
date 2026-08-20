@@ -222,10 +222,6 @@ public class LivePlayActivity extends BaseActivity {
 
         // Getting EPG Address
         epgStringAddress = Hawk.get(HawkConfig.EPG_URL, "");
-        if (StringUtils.isBlank(epgStringAddress)) {
-            epgStringAddress = "https://epg.112114.xyz/";
-//            Hawk.put(HawkConfig.EPG_URL, epgStringAddress);
-        }
         // http://epg.aishangtv.top/live_proxy_epg_bc.php
         // http://diyp.112114.xyz/
 
@@ -772,7 +768,11 @@ public class LivePlayActivity extends BaseActivity {
         //     return;
         if (channel_Name.getChannelName() != null) {
             showChannelInfo();
-            String savedEpgKey = channel_Name.getChannelName() + "_" + epgDateAdapter.getItem(epgDateAdapter.getSelectedIndex()).getDatePresented();
+            int epgDateIndex = epgDateAdapter.getSelectedIndex();
+            String epgDateStr = epgDateIndex >= 0 ?
+                    epgDateAdapter.getItem(epgDateIndex).getDatePresented() :
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(new Date());
+            String savedEpgKey = channel_Name.getChannelName() + "_" + epgDateStr;
             if (hsEpg.containsKey(savedEpgKey)) {
                 String[] epgInfo = EpgUtil.getEpgInfo(channel_Name.getChannelName());
                 getTvLogo(channel_Name.getChannelName(), epgInfo == null ? null : epgInfo[0]);
@@ -801,11 +801,7 @@ public class LivePlayActivity extends BaseActivity {
                 epgListAdapter.CanBack(currentLiveChannelItem.getinclude_back());
                 epgListAdapter.setNewData(arrayList);
             } else {
-                int selectedIndex = epgDateAdapter.getSelectedIndex();
-                if (selectedIndex < 0)
-                    getEpg(new Date());
-                else
-                    getEpg(epgDateAdapter.getData().get(selectedIndex).getDateParamVal());
+	                // fix: do not recursively call getEpg on cache miss
             }
         }
     }
@@ -827,6 +823,8 @@ public class LivePlayActivity extends BaseActivity {
 
     public void getEpg(Date date) {
 
+        OkGo.getInstance().cancelTag(this);
+
         String channelName = channel_Name.getChannelName();
         SimpleDateFormat timeFormat = new SimpleDateFormat("yyyy-MM-dd");
         timeFormat.setTimeZone(TimeZone.getTimeZone("GMT+8:00"));
@@ -838,13 +836,26 @@ public class LivePlayActivity extends BaseActivity {
         }
         epgListAdapter.CanBack(currentLiveChannelItem.getinclude_back());
 
+        String currentEpgAddress = Hawk.get(HawkConfig.EPG_URL, "");
+        if (currentEpgAddress != null && !currentEpgAddress.isEmpty()) {
+            epgStringAddress = currentEpgAddress;
+        }
+
+        if (epgStringAddress == null || epgStringAddress.isEmpty()) {
+            showEpg(date, new ArrayList());
+            return;
+        }
+
         String epgUrl;
         if (epgStringAddress.contains("{name}") && epgStringAddress.contains("{date}")) {
             epgUrl = epgStringAddress.replace("{name}", URLEncoder.encode(epgTagName)).replace("{date}", timeFormat.format(date));
         } else {
             epgUrl = epgStringAddress + "?ch=" + URLEncoder.encode(epgTagName) + "&date=" + timeFormat.format(date);
         }
-        OkGo.<String>get(epgUrl).execute(new StringCallback() {
+        OkGo.<String>get(epgUrl)
+                .tag(this)
+                .execute(new StringCallback() {
+            @Override
             public void onSuccess(Response<String> response) {
                 String paramString = response.body();
                 ArrayList arrayList = new ArrayList();
@@ -865,11 +876,15 @@ public class LivePlayActivity extends BaseActivity {
                 }
                 showEpg(date, arrayList);
 
-                String savedEpgKey = channelName + "_" + epgDateAdapter.getItem(epgDateAdapter.getSelectedIndex()).getDatePresented();
-                if (!hsEpg.containsKey(savedEpgKey))
-                    hsEpg.put(savedEpgKey, arrayList);
-                if (channelName != null && !channelName.equals(channel_Name.getChannelName()))
+                int epgDateIndex = epgDateAdapter.getSelectedIndex();
+                String epgDateStr = epgDateIndex >= 0 ?
+                        epgDateAdapter.getItem(epgDateIndex).getDatePresented() :
+                        new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(new Date());
+                String savedEpgKey = channelName + "_" + epgDateStr;
+                hsEpg.put(savedEpgKey, arrayList);
+                if (channelName != null && !channelName.equals(channel_Name.getChannelName())) {
                     return;
+                }
 
                 showEpg(date, arrayList);
                 showBottomEpg();
@@ -878,8 +893,11 @@ public class LivePlayActivity extends BaseActivity {
             public void onFailure(int i, String str) {
                 if (channelName != null && !channelName.equals(channel_Name.getChannelName()))
                     return;
-                showEpg(date, new ArrayList());
-                showBottomEpg();
+                boolean hasData = epgdata != null && !epgdata.isEmpty()
+                        && epgdata.get(0).title != null && !epgdata.get(0).title.contains("暂无");
+                if (hasData) {
+                    showBottomEpg();
+                }
             }
         });
     }
@@ -928,6 +946,8 @@ public class LivePlayActivity extends BaseActivity {
         }
         channel_Name = currentLiveChannelItem;
         currentLiveChannelItem.setinclude_back(currentLiveChannelItem.getUrl().indexOf("PLTV/8888") != -1);
+
+        epgDateAdapter.setSelectedIndex(6);
 
         // takagen99 : Moved update of Channel Info here before getting EPG (no dependency on EPG)
         mHandler.post(tv_sys_timeRunnable);
@@ -1316,6 +1336,7 @@ public class LivePlayActivity extends BaseActivity {
             calendar.add(Calendar.DAY_OF_MONTH, 1);
         }
         mEpgDateGridView.setAdapter(epgDateAdapter);
+        epgDateAdapter.setSelectedIndex(6);
         mEpgDateGridView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
@@ -1815,6 +1836,13 @@ public class LivePlayActivity extends BaseActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void refresh(RefreshEvent event) {
+        if (event.type == RefreshEvent.TYPE_EPG_URL_CHANGE) {
+            epgStringAddress = Hawk.get(HawkConfig.EPG_URL, "");
+            if (channel_Name != null) {
+                getEpg(new Date());
+            }
+            return;
+        }
         if (event.type == RefreshEvent.TYPE_LIVEPLAY_UPDATE) {
             Bundle bundle = (Bundle) event.obj;
             int channelGroupIndex = bundle.getInt("groupIndex", 0);
