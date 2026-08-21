@@ -874,7 +874,6 @@ public class LivePlayActivity extends BaseActivity {
                 } catch (JSONException jSONException) {
                     jSONException.printStackTrace();
                 }
-                showEpg(date, arrayList);
 
                 int epgDateIndex = epgDateAdapter.getSelectedIndex();
                 String epgDateStr = epgDateIndex >= 0 ?
