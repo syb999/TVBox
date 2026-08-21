@@ -57,6 +57,7 @@
     <string name="mn_history_num">历史条数</string>
     <string name="mn_live_boot">启动时进直播</string>
     <string name="mn_boot_live">开机自启进直播</string>
+    <string name="mn_boot_perm">自启动权限</string>
     <string name="mn_wall_change">换张壁纸</string>
     <string name="mn_wall_load">壁纸更换中</string>
     <string name="mn_wall_reset">重置壁纸</string>

@@ -2,7 +2,9 @@ package com.github.tvbox.osc.ui.fragment;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -68,6 +70,7 @@ public class ModelSettingFragment extends BaseLazyFragment {
     private TextView tvHomeApi;
     private TextView tvHomeDefaultShow;
     private TextView tvBootLive;
+    private TextView tvBootPerm;
     private TextView tvHomeShow;
     private TextView tvHomeIcon;
     private TextView tvHomeRec;
@@ -144,6 +147,8 @@ public class ModelSettingFragment extends BaseLazyFragment {
         tvHomeDefaultShow.setText(Hawk.get(HawkConfig.HOME_DEFAULT_SHOW, false) ? "开启" : "关闭");
         tvBootLive = findViewById(R.id.tvBootLive);
         tvBootLive.setText(Hawk.get(HawkConfig.BOOT_START_LIVE, false) ? "开启" : "关闭");
+        tvBootPerm = findViewById(R.id.tvBootPerm);
+        tvBootPerm.setText(Settings.canDrawOverlays(mActivity) ? "已授权" : "未授权");
 
         //takagen99 : Set HomeApi as default
         findViewById(R.id.llHomeApi).requestFocus();
@@ -820,6 +825,24 @@ public class ModelSettingFragment extends BaseLazyFragment {
                 FastClickCheckUtil.check(v);
                 Hawk.put(HawkConfig.BOOT_START_LIVE, !Hawk.get(HawkConfig.BOOT_START_LIVE, false));
                 tvBootLive.setText(Hawk.get(HawkConfig.BOOT_START_LIVE, true) ? "开启" : "关闭");
+            }
+        });
+
+        // 自启动权限 (Android 10+ 后台启动豁免需要悬浮窗权限)
+        findViewById(R.id.llBootPerm).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                if (!Settings.canDrawOverlays(mActivity)) {
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                Uri.parse("package:" + mActivity.getPackageName()));
+                        startActivity(intent);
+                    } catch (Throwable ignored) {
+                    }
+                } else {
+                    Toast.makeText(mActivity, "已授权", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 

@@ -139,6 +139,19 @@ public class HomeActivity extends BaseActivity {
         // takagen99: Added to allow read string
         res = getResources();
 
+        // fix: 开机自启依赖 SYSTEM_ALERT_WINDOW 豁免 (Android 10+ 后台启动限制)
+        // 若用户开了"开机自启进直播"但未授权悬浮窗, 弹窗引导授权
+        // (重装 APK 会重置 AppOps 权限, 此检查保证首次进入时自动恢复)
+        if (Hawk.get(HawkConfig.BOOT_START_LIVE, false)
+                && !Settings.canDrawOverlays(this)) {
+            try {
+                Intent overlayIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + getPackageName()));
+                startActivity(overlayIntent);
+            } catch (Throwable ignored) {
+            }
+        }
+
         EventBus.getDefault().register(this);
         ControlManager.get().startServer();
         App.startWebserver();
