@@ -67,6 +67,7 @@ public class ModelSettingFragment extends BaseLazyFragment {
     // Home Section
     private TextView tvHomeApi;
     private TextView tvHomeDefaultShow;
+    private TextView tvBootLive;
     private TextView tvHomeShow;
     private TextView tvHomeIcon;
     private TextView tvHomeRec;
@@ -141,6 +142,8 @@ public class ModelSettingFragment extends BaseLazyFragment {
         tvDns.setText(OkGoHelper.dnsHttpsList.get(Hawk.get(HawkConfig.DOH_URL, 0)));
         tvHomeDefaultShow = findViewById(R.id.tvHomeDefaultShow);
         tvHomeDefaultShow.setText(Hawk.get(HawkConfig.HOME_DEFAULT_SHOW, false) ? "开启" : "关闭");
+        tvBootLive = findViewById(R.id.tvBootLive);
+        tvBootLive.setText(Hawk.get(HawkConfig.BOOT_START_LIVE, false) ? "开启" : "关闭");
 
         //takagen99 : Set HomeApi as default
         findViewById(R.id.llHomeApi).requestFocus();
@@ -808,6 +811,15 @@ public class ModelSettingFragment extends BaseLazyFragment {
                 FastClickCheckUtil.check(v);
                 Hawk.put(HawkConfig.HOME_DEFAULT_SHOW, !Hawk.get(HawkConfig.HOME_DEFAULT_SHOW, false));
                 tvHomeDefaultShow.setText(Hawk.get(HawkConfig.HOME_DEFAULT_SHOW, true) ? "开启" : "关闭");
+            }
+        });
+
+        findViewById(R.id.llBootLive).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FastClickCheckUtil.check(v);
+                Hawk.put(HawkConfig.BOOT_START_LIVE, !Hawk.get(HawkConfig.BOOT_START_LIVE, false));
+                tvBootLive.setText(Hawk.get(HawkConfig.BOOT_START_LIVE, true) ? "开启" : "关闭");
             }
         });
 
